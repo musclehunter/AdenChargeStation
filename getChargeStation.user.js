@@ -11,5 +11,6 @@
 
 (function() {
     //まだつくってません
-
+    var account_list = localStorage.getItem('account_list');
+    console.log(account_list);
 })();
