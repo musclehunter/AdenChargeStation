@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Aden Charge Station
 // @namespace    https://github.com/musclehunter
-// @version      0.1
+// @version      0.2
 // @description  easy login and receive charge station in Lineage2 JP classic Aden server
 // @author       MuscleHunter
 // @match        https://*.ncsoft.jp/*
