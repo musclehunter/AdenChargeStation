@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Aden Charge Station
 // @namespace    https://github.com/musclehunter
-// @version      0.4
+// @version      0.5
 // @description  easy login and receive charge station in Lineage2 JP classic Aden server
 // @author       MuscleHunter
 // @match        https://*.ncsoft.jp/*
@@ -44,8 +44,10 @@
 
         //dom sakujo
         $('#' + mail).remove();
+        acs_msg.text('アカウントを削除しました');
     }
 
+    //main
     function l2ACSreciveChargeStation() {
         let acc = $(this).data('mail');
         let myPass = $(this).data('pass');
@@ -56,7 +58,8 @@
                 retURL: "https://www.ncsoft.jp/shop/1949/31806/detail"
             },
             function (data) {
-                console.log(data);
+                acs_msg.text('ログインしました').append('<br>');
+
                 $.post("https://www.ncsoft.jp/shop/cart/ajaxSaveGoodsToCart",
                     {
                         goodsID: item_info.goodsID,
@@ -70,7 +73,8 @@
                         random: 71
                     },
                     function (data) {
-                        console.log(data);
+                        acs_msg.append($('<span>').text('カートに保存しました')).append('<br>');
+
 
                         $.post("https://www.ncsoft.jp/shop/cart/ajaxGameCharacterList",
                             {
@@ -82,9 +86,12 @@
                                 categoryID: 1949
                             },
                             (charaData) => {
+                                acs_msg.append($('<span>').text('キャラクター情報を取得しました').append('<br>').append($('<span>').text('「' + charaData.result[0].charName + '」で受け取ります')).append('<br>'));
+                                console.log(charaData.result[0]);
+
                                 $.post("https://www.ncsoft.jp/shop/ajaxCommonPasswordProc", {password: myPass}, (commomPassResult) => {
+                                    acs_msg.append($('<span>').text('パスワード確認')).append('<br>');
                                     console.log(commomPassResult);
-                                    console.log(charaData.result[0]);
 
                                     $.post("https://www.ncsoft.jp/shop/order/ajaxValidationOrderInfo",
                                         {
@@ -118,6 +125,8 @@
                                             dispChar: "all"
                                         },
                                         (validateRes) => {
+                                            acs_msg.append($('<span>').text('バリデーションオーダーインフォ')).append('<br>');
+
                                             console.log(validateRes);
                                             $.post("https://www.ncsoft.jp/shop/order/ajaxSaveOrderInfomation",
                                                 {
@@ -134,9 +143,17 @@
                                                     addinfo: '[{"goodsID":"' + item_info.goodsID + '","extInfo":{"gameServerID":"74","gameCharacterID": ' + charaData.result[0].charID + ',"gameServiceID":"32","gameCharacterName":"' + charaData.result[0].charName + '","gameServerName":"アデン","characterRace":-1,"itemProperty":"","targetGameServerID":"","targetGameServerName":"","targetGameCharacterID":"","targetGameCharacterName":""}}]'
                                                 },
                                                 function (data) {
-                                                    console.log(data);
-                                                    top.location.href = "https://www.ncsoft.jp/login/logout?retURL=https://www.ncsoft.jp/lineage2classic/"
-                                                });
+                                                    if (data.sysErrorCode == 0) {
+                                                        acs_msg.append($('<span>').text('購入成功')).append('<br>');
+                                                    } else {
+                                                        acs_msg.append($('<span>').text('購入失敗')).append('<br>')
+                                                            .append($('<span>').html(data.sysErrorDesc)).append('<br>');
+                                                    }
+                                                    console.log(data, data.sysErrorDesc);
+                                                    $.get("https://www.ncsoft.jp/login/logout");
+                                                    acs_msg.append($('<span>').text('ログアウトしました')).append('<br>');
+
+                                                }, 'json');
                                         });
                                 });
                             }, 'json');
@@ -145,12 +162,68 @@
             });
     }
 
-    let account_data = l2ACSgetData('account_data');//account情報
 
-    console.log(account_data);//for debug
+    //create ui
+    let acs_div = $('<div>').attr('id', 'l2acs_div').css({
+        'width': '400px',
+        'position': 'absolute',
+        'top': 0,
+        'left': 0,
+        'padding': '10px',
+        'background': 'white',
+        'z-index': 100000
+    });
+
+    let heading_css = {
+        'padding-bottom': '5px',
+        'border-bottom': '1px solid #d2d2d2',
+    };
+
+    //タイトル
+    let acs_msg = $('<p>').attr('id', 'acs_msg').css('font-size', '13px');
+    let acs_div_title =
+        $('<div>').css(heading_css).append(
+            $('<p>').text('アデンチャージステーション').css('font-size', '16px'))
+            .append(acs_msg)
+            .append($('<button>').css({
+                'position': 'absolute',
+                'right': '2px',
+                'top': '2px'
+            }).text('閉じる').on('click', function () {
+                $('#l2acs_div').remove();
+            }));
+
+    //アカウントリストを生成
+    let acs_div_list =
+        $('<div>').append(
+            $('<p>').text('アカウントリスト').css({
+                'margin': '5px',
+                'font-size': '13px'
+            })
+        );
+
+    let account_data = l2ACSgetData('account_data');//account情報
+    for (let mail in account_data) {
+        acs_div_list.append(
+            $('<div>').attr('id', mail).css('margin', '2px')
+                .append(
+                    $('<span>').text(mail).css('margin', '2px'))
+                .append(
+                    $('<button>').text('削除').css('margin', '2px').data('mail', mail).on('click', l2ACSremoveData))
+                .append(
+                    $('<button>').text('受取').css('margin', '2px').data('mail', mail).data('pass', account_data[mail].pass).on('click', l2ACSreciveChargeStation)
+                )
+        );
+    }
+    if (account_data == null || Object.keys(account_data).length == 0) {
+        acs_msg.text('アカウントを追加してください');
+    } else {
+        acs_msg.text('受取ボタンを押してください');
+    }
+
     //account 追加用フォーム
-    //登録ボタン
-    let regist_button = $('<button>').text('登録').on('click', function () {
+    //登録ボタン 生成
+    let regist_button = $('<button>').text('アカウント追加').on('click', function () {
         let acc = l2ACSgetData('account_data');
         if (acc == null) {
             acc = {}
@@ -161,39 +234,55 @@
             return false;
         }
         if (!acc.hasOwnProperty(mail)) {
-            //dom tuika
-            $('#l2ACS_acc_form').append(
-                $('<p>').attr('id', mail).text(mail).append(
-                    $('<button>').text('削除').data('mail', mail).on('click', l2ACSremoveData))
+            //新規ならdom tuika
+            acs_div_list.append(
+                $('<div>').attr('id', mail).css('margin', '2px')
                     .append(
-                        $('<button>').text('受取').data('mail', mail).data('pass',pass).on('click', l2ACSreciveChargeStation)
+                        $('<span>').text(mail).css('margin', '2px'))
+                    .append(
+                        $('<button>').text('削除').css('margin', '2px').data('mail', mail).on('click', l2ACSremoveData))
+                    .append(
+                        $('<button>').text('受取').css('margin', '2px').data('mail', mail).data('pass', pass).on('click', l2ACSreciveChargeStation)
                     )
             );
         }
+        //local storage に保存
         acc[mail] = {
             mail: mail,
             pass: pass
         };
         l2ACSsetData('account_data', acc);
+        acs_msg.text('アカウントを追加しました');
     });
 
-    // let input_css = {"font-size": "15px", "display":"block", "width" : "120px", "border" : "1px solid gray", "margin":"1px"};
-    let acc_form = $('<li id="l2ACS_acc_form">');
-    for (var mail in account_data) {
-        acc_form.append(
-            $('<p>').attr('id', mail).text(mail)
-                .append(
-                    $('<button>').text('削除').data('mail', mail).on('click', l2ACSremoveData))
-                .append(
-                    $('<button>').text('受取').data('mail', mail).data('pass',account_data[mail].pass).on('click', l2ACSreciveChargeStation)
-                )
+    let acs_div_menu =
+        $('<div>').css(heading_css).css('margin', '20px auto').append(
+            $('<p>').text('アカウント情報の追加・上書き').css({
+                'margin': '5px',
+                'font-size': '13px'
+            })
         );
-    }
 
-    acc_form.append($('<input type="text" id="l2ACS_add_mail">'))
-        .append($('<input type="password" id="l2ACS_add_pass">'))
+    //登録ボタンを追加
+    let input_css = {
+        'margin': '2px',
+        'border': '1px solid #d2d2d2',
+        'border-radius': '4px',
+        'height': '15px',
+        'color': '#767676',
+        'padding': '0 0 1px',
+        'font-size': '13px',
+        'vertical-aligh': 'middle',
+        'background': 'white'
+    };
+    acs_div_menu.append($('<input type="text" id="l2ACS_add_mail" placeholder="アカウント">').css(input_css))
+        .append($('<input type="password" id="l2ACS_add_pass" placeholder="パスワード">').css(input_css))
         .append(regist_button);
     // .css({ "background":"white","display": "block", "position": "absolute", "z-index": 1000, "right":"0px", "top": "0px", "padding": "5px","text-align":"right"});
-    $('#myPlaync .wrapper li').first().after(acc_form);
+
+    acs_div.append(acs_div_title)
+        .append(acs_div_menu)
+        .append(acs_div_list);
+    $('body').prepend(acs_div);
 
 })();
