@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name         Aden Charge Station
 // @namespace    https://github.com/musclehunter
-// @version      0.5
+// @version      1.0
 // @description  easy login and receive charge station in Lineage2 JP classic Aden server
 // @author       MuscleHunter
-// @match        https://*.ncsoft.jp/*
+// @match        https://www.ncsoft.jp/aion/
 // @grant        none
 // @require      https://code.jquery.com/jquery-3.4.1.min.js
 // ==/UserScript==
@@ -44,13 +44,14 @@
 
         //dom sakujo
         $('#' + mail).remove();
-        acs_msg.text('アカウントを削除しました');
+        acs_msg.text('アカウントを削除しました').append('<br>');
     }
 
     //main
     function l2ACSreciveChargeStation() {
         let acc = $(this).data('mail');
         let myPass = $(this).data('pass');
+        acs_msg.append($('<span>').text('ログインします[' + acc + ']')).append('<br>');
         $.post("https://www.ncsoft.jp/login/ajax/loginProc",
             {
                 account: acc,
@@ -58,7 +59,15 @@
                 retURL: "https://www.ncsoft.jp/shop/1949/31806/detail"
             },
             function (data) {
-                acs_msg.text('ログインしました').append('<br>');
+            console.log(data);
+                if (data.result[0].errorCode == "000") {
+                    acs_msg.append($('<span>').text('ログインしました')).append('<br>');
+                } else {
+                    acs_msg.append($('<span>').text('ログイン失敗')).append('<br>')
+                        .append($('<span>').html(data.result[0].errorMsg)).append('<br>');
+                    return false;
+                }
+
 
                 $.post("https://www.ncsoft.jp/shop/cart/ajaxSaveGoodsToCart",
                     {
@@ -159,11 +168,45 @@
                             }, 'json');
                     });
 
-            });
+            },'json');
     }
 
+    function l2ACSgenerateButtons(mail, pass)
+    {
+        return $('<div>').attr('id', mail).css('margin', '2px')
+            .append(
+                $('<span>').text(mail).css('margin', '2px'))
+            .append(
+                $('<button>').text('削除').css('margin', '2px').data('mail', mail).on('click', l2ACSremoveData))
+            .append(
+                $('<button>').addClass('l2acsReceive').text('受取').css('margin', '2px').data('mail', mail).data('pass', pass).on('click', l2ACSreciveChargeStation)
+            );
+    }
 
-    //create ui
+    /**
+     * 全受取
+     */
+    function l2ACSreceiveAll()
+    {
+        acs_msg.text("");
+        acs_msg.append($('<span>').text('登録されているアカウントを順番に受け取ります')).append('<br>');
+
+        let buttons = $('.l2acsReceive');
+        let delay = 60000;//1分毎に実行する
+        buttons.each(function(num) {
+            let button = $(buttons[num]);
+            acs_msg.append($('<span>').text(button.data('mail')+"受取タイマーセット")).append('<br>');
+            setTimeout(function(){
+                button.click();
+            }, delay*num);
+        });
+    }
+
+    //全受取ボタン
+    let receive_all_button = $('<button>').css('margin','2px').text('全受取').on('click', l2ACSreceiveAll);
+
+
+        //create ui
     let acs_div = $('<div>').attr('id', 'l2acs_div').css({
         'width': '400px',
         'position': 'absolute',
@@ -203,22 +246,17 @@
         );
 
     let account_data = l2ACSgetData('account_data');//account情報
+    //account list の生成
     for (let mail in account_data) {
-        acs_div_list.append(
-            $('<div>').attr('id', mail).css('margin', '2px')
-                .append(
-                    $('<span>').text(mail).css('margin', '2px'))
-                .append(
-                    $('<button>').text('削除').css('margin', '2px').data('mail', mail).on('click', l2ACSremoveData))
-                .append(
-                    $('<button>').text('受取').css('margin', '2px').data('mail', mail).data('pass', account_data[mail].pass).on('click', l2ACSreciveChargeStation)
-                )
-        );
+        acs_div_list.append(l2ACSgenerateButtons(mail, account_data[mail].pass));
     }
+
+
+
     if (account_data == null || Object.keys(account_data).length == 0) {
-        acs_msg.text('アカウントを追加してください');
+        acs_msg.text('アカウントを追加してください').append('<br>');;
     } else {
-        acs_msg.text('受取ボタンを押してください');
+        acs_msg.text('受取ボタンを押してください').append('<br>');;
     }
 
     //account 追加用フォーム
@@ -235,16 +273,10 @@
         }
         if (!acc.hasOwnProperty(mail)) {
             //新規ならdom tuika
-            acs_div_list.append(
-                $('<div>').attr('id', mail).css('margin', '2px')
-                    .append(
-                        $('<span>').text(mail).css('margin', '2px'))
-                    .append(
-                        $('<button>').text('削除').css('margin', '2px').data('mail', mail).on('click', l2ACSremoveData))
-                    .append(
-                        $('<button>').text('受取').css('margin', '2px').data('mail', mail).data('pass', pass).on('click', l2ACSreciveChargeStation)
-                    )
-            );
+            acs_div_list.append(l2ACSgenerateButtons(mail, pass));
+            acs_msg.text('アカウントを追加しました').append('<br>');;
+        } else {
+            acs_msg.text('上書きしました').append('<br>');;
         }
         //local storage に保存
         acc[mail] = {
@@ -252,7 +284,6 @@
             pass: pass
         };
         l2ACSsetData('account_data', acc);
-        acs_msg.text('アカウントを追加しました');
     });
 
     let acs_div_menu =
@@ -263,7 +294,7 @@
             })
         );
 
-    //登録ボタンを追加
+    //登録formを追加
     let input_css = {
         'margin': '2px',
         'border': '1px solid #d2d2d2',
@@ -277,7 +308,8 @@
     };
     acs_div_menu.append($('<input type="text" id="l2ACS_add_mail" placeholder="アカウント">').css(input_css))
         .append($('<input type="password" id="l2ACS_add_pass" placeholder="パスワード">').css(input_css))
-        .append(regist_button);
+        .append(regist_button)
+        .append(receive_all_button);
     // .css({ "background":"white","display": "block", "position": "absolute", "z-index": 1000, "right":"0px", "top": "0px", "padding": "5px","text-align":"right"});
 
     acs_div.append(acs_div_title)
