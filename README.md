@@ -3,10 +3,25 @@ for Lineage2 JP Aden Charge Station
 
 Lineage2クラシックのアデンサーバーで毎日配布されているアデンチャージステーションの受取用のスクリプトです。
 
-リネ2２公式で毎回でるとうざそうなので、タワーオブアイオンのTOPページで動作するよう設定してあります。
+Tampermonkey用スクリプトです
+
+リネ2公式で毎回でるとうざそうなので、タワーオブアイオンのTOPページで動作するよう設定してあります。
 https://www.ncsoft.jp/aion/
 
 リネ2公式がいい人は適当に編集してください。
+
+## 動作環境
+Google ChromeのTampermonkeyさんで動作確認しました。
+他ブラウザは見てませんがTampermonkeyさん入れられるならきっと動くでしょう？
+
+## インストール
+Tampermonkeyさんをまず入れてください。
+https://www.tampermonkey.net/
+
+その後スクリプトをインストール
+https://github.com/musclehunter/AdenChargeStation/raw/master/getChargeStation.user.js
+
+チャージステーションが新しくなった時はアップデートの必要があります。
 
 ### 使い方
 
