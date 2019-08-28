@@ -11,9 +11,9 @@
 
 (function () {
     let item_info = {
-        goodsID: 31806,
-        paymentWayID: 32371,
-        saleCountID: 31999,
+        goodsID: 31911,
+        paymentWayID: 32475,
+        saleCountID: 32104,
     };
 
     //localstorage functions
