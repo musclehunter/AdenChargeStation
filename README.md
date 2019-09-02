@@ -10,6 +10,9 @@ https://www.ncsoft.jp/aion/
 
 リネ2公式がいい人は適当に編集してください。
 
+![動作イメージ](https://github.com/musclehunter/musclehunter_desc_images/raw/master/aden_charge_station.jpg)
+
+
 ## 動作環境
 Google ChromeのTampermonkeyさんで動作確認しました。
 他ブラウザは見てませんがTampermonkeyさん入れられるならきっと動くでしょう？
