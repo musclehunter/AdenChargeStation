@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Aden Charge Station
 // @namespace    https://github.com/musclehunter
-// @version      1.1
+// @version      1.2
 // @description  easy login and receive charge station in Lineage2 JP classic Aden server
 // @author       MuscleHunter
 // @match        https://www.ncsoft.jp/aion/
@@ -59,7 +59,7 @@
                 retURL: "https://www.ncsoft.jp/shop/1949/31806/detail"
             },
             function (data) {
-            console.log(data);
+                console.log(data);
                 if (data.result[0].errorCode == "000") {
                     acs_msg.append($('<span>').text('ログインしました')).append('<br>');
                 } else {
@@ -154,6 +154,8 @@
                                                 function (data) {
                                                     if (data.sysErrorCode == 0) {
                                                         acs_msg.append($('<span>').text('購入成功')).append('<br>');
+                                                        let date = new Date();
+                                                        l2ACSsetData("last_"+acc, date.getTime());
                                                     } else {
                                                         acs_msg.append($('<span>').text('購入失敗')).append('<br>')
                                                             .append($('<span>').html(data.sysErrorDesc)).append('<br>');
@@ -173,13 +175,21 @@
 
     function l2ACSgenerateButtons(mail, pass)
     {
+        let date = "[--/- --:--:--]";
+        let last_received = l2ACSgetData('last_'+mail);
+        if (last_received != null) {
+            let date_obj = new Date(last_received);
+            date = "["+date_obj.getMonth()+"/"+date_obj.getDate()+" "+date_obj.getHours()+":"+date_obj.getMinutes()+":"+date_obj.getSeconds()+"]";
+        }
         return $('<div>').attr('id', mail).css('margin', '2px')
             .append(
-                $('<span>').text(mail).css('margin', '2px'))
-            .append(
-                $('<button>').text('削除').css('margin', '2px').data('mail', mail).on('click', l2ACSremoveData))
-            .append(
                 $('<button>').addClass('l2acsReceive').text('受取').css('margin', '2px').data('mail', mail).data('pass', pass).on('click', l2ACSreciveChargeStation)
+                    .append(
+                        $('<button>').text('削除').css('margin', '2px').data('mail', mail).on('click', l2ACSremoveData))
+                    .append(
+                        $('<span>').text(date).css('margin', '2px'))
+                    .append(
+                        $('<span>').text(mail).css('margin', '2px'))
             );
     }
 
@@ -206,7 +216,7 @@
     let receive_all_button = $('<button>').css('margin','2px').text('全受取').on('click', l2ACSreceiveAll);
 
 
-        //create ui
+    //create ui
     let acs_div = $('<div>').attr('id', 'l2acs_div').css({
         'width': '400px',
         'position': 'absolute',
