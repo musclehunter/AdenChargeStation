@@ -15,6 +15,7 @@
         paymentWayID: 32475,
         saleCountID: 32104,
     };
+    let btn_css = {'margin':'5px 5px 5px 0',"padding":"0 5px","border":"1px solid black","border-radius":"3px"};
 
     //localstorage functions
     function l2ACSgetData(key) {
@@ -155,7 +156,9 @@
                                                     if (data.sysErrorCode == 0) {
                                                         acs_msg.append($('<span>').text('購入成功')).append('<br>');
                                                         let date = new Date();
-                                                        l2ACSsetData("last_"+acc, date.getTime());
+                                                        l2ACSsetData("last_" + acc, date.getTime());
+                                                        let receive_date = "[" + (date.getMonth() + 1) + "/" + date.getDate() + " " + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds() + "]";
+                                                        $('#' + acc + " span").first().text(receive_date);
                                                     } else {
                                                         acs_msg.append($('<span>').text('購入失敗')).append('<br>')
                                                             .append($('<span>').html(data.sysErrorDesc)).append('<br>');
@@ -170,51 +173,47 @@
                             }, 'json');
                     });
 
-            },'json');
+            }, 'json');
     }
 
-    function l2ACSgenerateButtons(mail, pass)
-    {
+    function l2ACSgenerateButtons(mail, pass) {
         let date = "[--/- --:--:--]";
-        let last_received = l2ACSgetData('last_'+mail);
+        let last_received = l2ACSgetData('last_' + mail);
         if (last_received != null) {
             let date_obj = new Date(last_received);
-            date = "["+date_obj.getMonth()+"/"+date_obj.getDate()+" "+date_obj.getHours()+":"+date_obj.getMinutes()+":"+date_obj.getSeconds()+"]";
+            date = "[" + (date_obj.getMonth() + 1) + "/" + date_obj.getDate() + " " + date_obj.getHours() + ":" + date_obj.getMinutes() + ":" + date_obj.getSeconds() + "]";
         }
         return $('<div>').attr('id', mail).css('margin', '2px')
             .append(
-                $('<button>').addClass('l2acsReceive').text('受取').css('margin', '2px').data('mail', mail).data('pass', pass).on('click', l2ACSreciveChargeStation)
-                    .append(
-                        $('<button>').text('削除').css('margin', '2px').data('mail', mail).on('click', l2ACSremoveData))
-                    .append(
-                        $('<span>').text(date).css('margin', '2px'))
-                    .append(
-                        $('<span>').text(mail).css('margin', '2px'))
-            );
+                $('<button>').addClass('l2acsReceive').text('受取').css(btn_css).data('mail', mail).data('pass', pass).on('click', l2ACSreciveChargeStation))
+            .append(
+                $('<button>').text('削除').css(btn_css).data('mail', mail).on('click', l2ACSremoveData))
+            .append(
+                $('<span>').text(date).css('margin', '2px'))
+            .append(
+                $('<span>').text(mail).css('margin', '2px'));
     }
 
     /**
      * 全受取
      */
-    function l2ACSreceiveAll()
-    {
+    function l2ACSreceiveAll() {
         acs_msg.text("");
         acs_msg.append($('<span>').text('登録されているアカウントを順番に受け取ります')).append('<br>');
 
         let buttons = $('.l2acsReceive');
         let delay = 60000;//1分毎に実行する
-        buttons.each(function(num) {
+        buttons.each(function (num) {
             let button = $(buttons[num]);
-            acs_msg.append($('<span>').text(button.data('mail')+"受取タイマーセット")).append('<br>');
-            setTimeout(function(){
+            acs_msg.append($('<span>').text(button.data('mail') + "受取タイマーセット")).append('<br>');
+            setTimeout(function () {
                 button.click();
-            }, delay*num);
+            }, delay * num);
         });
     }
 
     //全受取ボタン
-    let receive_all_button = $('<button>').css('margin','2px').text('全受取').on('click', l2ACSreceiveAll);
-
+    let receive_all_button = $('<button>').css(btn_css).text('全受取').on('click', l2ACSreceiveAll);
 
     //create ui
     let acs_div = $('<div>').attr('id', 'l2acs_div').css({
@@ -262,16 +261,17 @@
     }
 
 
-
     if (account_data == null || Object.keys(account_data).length == 0) {
-        acs_msg.text('アカウントを追加してください').append('<br>');;
+        acs_msg.text('アカウントを追加してください').append('<br>');
+        ;
     } else {
-        acs_msg.text('受取ボタンを押してください').append('<br>');;
+        acs_msg.text('受取ボタンを押してください').append('<br>');
+        ;
     }
 
     //account 追加用フォーム
     //登録ボタン 生成
-    let regist_button = $('<button>').text('アカウント追加').on('click', function () {
+    let regist_button = $('<button>').text('アカウント追加').css(btn_css).on('click', function () {
         let acc = l2ACSgetData('account_data');
         if (acc == null) {
             acc = {}
@@ -284,9 +284,11 @@
         if (!acc.hasOwnProperty(mail)) {
             //新規ならdom tuika
             acs_div_list.append(l2ACSgenerateButtons(mail, pass));
-            acs_msg.text('アカウントを追加しました').append('<br>');;
+            acs_msg.text('アカウントを追加しました').append('<br>');
+            ;
         } else {
-            acs_msg.text('上書きしました').append('<br>');;
+            acs_msg.text('上書きしました').append('<br>');
+            ;
         }
         //local storage に保存
         acc[mail] = {
