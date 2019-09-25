@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Aden Charge Station
 // @namespace    https://github.com/musclehunter
-// @version      1.3
+// @version      1.4
 // @description  easy login and receive charge station in Lineage2 JP classic Aden server
 // @author       MuscleHunter
 // @match        https://www.ncsoft.jp/aion/
@@ -16,6 +16,12 @@
         saleCountID: 31899,
     };
     let btn_css = {'margin':'5px 5px 5px 0',"padding":"0 5px","border":"1px solid black","border-radius":"3px"};
+
+    function convert_id(id) {
+        id.replace('.','-');
+        id.replace('@', '_at_');
+        return id;
+    }
 
     //localstorage functions
     function l2ACSgetData(key) {
@@ -44,7 +50,7 @@
         l2ACSsetData('account_data', acc);
 
         //dom sakujo
-        $('#' + mail).remove();
+        $('#' + convert_id(mail)).remove();
         acs_msg.text('アカウントを削除しました').append('<br>');
     }
 
@@ -158,7 +164,7 @@
                                                         let date = new Date();
                                                         l2ACSsetData("last_" + acc, date.getTime());
                                                         let receive_date = "[" + (date.getMonth() + 1) + "/" + date.getDate() + " " + date.getHours() + ":" + date.getMinutes() + ":" + date.getSeconds() + "]";
-                                                        $('#' + acc + " span").first().text(receive_date);
+                                                        $('#' + convert_id(acc) + " span").first().text(receive_date);
                                                     } else {
                                                         acs_msg.append($('<span>').text('購入失敗')).append('<br>')
                                                             .append($('<span>').html(data.sysErrorDesc)).append('<br>');
@@ -183,7 +189,7 @@
             let date_obj = new Date(last_received);
             date = "[" + (date_obj.getMonth() + 1) + "/" + date_obj.getDate() + " " + date_obj.getHours() + ":" + date_obj.getMinutes() + ":" + date_obj.getSeconds() + "]";
         }
-        return $('<div>').attr('id', mail).css('margin', '2px')
+        return $('<div>').attr('id', convert_id(mail)).css('margin', '2px')
             .append(
                 $('<button>').addClass('l2acsReceive').text('受取').css(btn_css).data('mail', mail).data('pass', pass).on('click', l2ACSreciveChargeStation))
             .append(
