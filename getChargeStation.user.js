@@ -11,9 +11,9 @@
 
 (function () {
     let item_info = {
-        goodsID: 31911,
-        paymentWayID: 32475,
-        saleCountID: 32104,
+        goodsID: 31706,
+        paymentWayID: 32271,
+        saleCountID: 31899,
     };
     let btn_css = {'margin':'5px 5px 5px 0',"padding":"0 5px","border":"1px solid black","border-radius":"3px"};
 
