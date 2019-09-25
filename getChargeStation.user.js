@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Aden Charge Station
 // @namespace    https://github.com/musclehunter
-// @version      1.4
+// @version      1.41
 // @description  easy login and receive charge station in Lineage2 JP classic Aden server
 // @author       MuscleHunter
 // @match        https://www.ncsoft.jp/aion/
@@ -18,8 +18,8 @@
     let btn_css = {'margin':'5px 5px 5px 0',"padding":"0 5px","border":"1px solid black","border-radius":"3px"};
 
     function convert_id(id) {
-        id.replace('.','-');
-        id.replace('@', '_at_');
+        id = id.replace('.','-');
+        id = id.replace('@', '_at_');
         return id;
     }
 
